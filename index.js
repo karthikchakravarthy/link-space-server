@@ -66,20 +66,20 @@ app.get('/api/links', (req, res) => {
 })
 
 app.post('/api/links', (req, res) => {
-    const schema = {
-        name: Joi.string().min(3).required(),
-        url: Joi.string().min(4).required()
-    }
-    const {error} = Joi.validate(req.body, schema)
+    const schema = Joi.object({
+        name: Joi.string().min(3).max(30).required(),
+        link: Joi.string().min(4).required()
+    })
+    const {error} = schema.validate(req.body)
     if(error) return res.status(400).send(error.details[0].message)
 
     const link = {
         id: allLinks.length + 1,
         name: req.body.name,
-        url: req.body.url
+        link: req.body.link
     }
 
-    allLinks.push(link)
+    allLinks.unshift(link)
     res.send(link)
 })
 const port = process.env.PORT || 3050

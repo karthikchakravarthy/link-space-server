@@ -2,8 +2,16 @@ const mongoose = require('mongoose')
 const Joi = require('joi')
 
 const Link = mongoose.model('Link', new mongoose.Schema({
-    name: String,
-    link: String
+    name: {
+        type: String,
+        required: true,
+        minlength: 3,
+        maxlength: 30
+    },
+    link: {
+        type: String,
+        required: true
+    }
 }))
 
 function validateLink(link) {

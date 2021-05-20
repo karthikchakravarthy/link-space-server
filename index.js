@@ -12,72 +12,36 @@ mongoose.connect('mongodb://localhost/linkSpaceDB')
     .then(() => console.log("connection is successfull to mongoDB"))
     .catch(() => console.error("could not connect to mongodb"))
 
-const allLinks = [
-    {
-        "id": 1,
-        "name": "Google",
-        "link": "https://www.google.com"
-    },
-    {
-        "id": 2,
-        "name": "Facebook",
-        "link": "https://www.facebook.com"
-    },
-    {
-        "id": 3,
-        "name": "Instagram",
-        "link": "https://www.instagram.com"
-    },
-    {
-        "id": 4,
-        "name": "Udemy",
-        "link": "https://www.udemy.com"
-    },
-    {
-        "id": 5,
-        "name": "Gmail",
-        "link": "https://www.gmail.com"
-    },
-    {
-        "id": 6,
-        "name": "Google",
-        "link": "https://www.google.com"
-    },
-    {
-        "id": 7,
-        "name": "Facebook",
-        "link": "https://www.facebook.com"
-    },
-    {
-        "id": 8,
-        "name": "Instagram",
-        "link": "https://www.instagram.com"
-    },
-    {
-        "id": 9,
-        "name": "Udemy",
-        "link": "https://www.udemy.com"
-    },
-    {
-        "id": 10,
-        "name": "Gmail",
-        "link": "https://www.gmail.com"
-    }
-]
+const linkSchema = new mongoose.Schema({
+    name: String,
+    link: String
+})
+
+const linkModel = mongoose.model('Link', linkSchema)
 
 function validateLink(link) {
     const urlPattern = "((http|https)://)?(www.)?"
-        + "[a-zA-Z0-9@:%._\+~#?&//=]{2,256}\.[a-z]"
-        + "{2,6}([-a-zA-Z0-9@:%._\+~#?&//=]*)",
+        + "[a-zA-Z0-9@:%._\\+~#?&//=]{2,256}\\.[a-z]"
+        + "{2,6}([-a-zA-Z0-9@:%._\\+~#?&//=]*)",
         schema = Joi.object({
             name: Joi.string().min(3).max(30).required(),
-            link: Joi.string().regex(new RegExp(urlPattern)).required()
+            link: Joi.string().pattern(new RegExp(urlPattern)).required()
         })
     return schema.validate(link)
 }
 
 app.get('/api/links', (req, res) => {
-    res.send(allLinks)
+    async function getAllLinks(params) {
+        try {
+            const allLinks = await linkModel
+                .find()
+            res.send(allLinks)
+        }
+        catch (error) {
+            res.status(400).send(error.message)
+        }
+    }
+    getAllLinks()
 })
 
 app.post('/api/links', (req, res) => {
@@ -86,45 +50,73 @@ app.post('/api/links', (req, res) => {
 
     const {name, link} = req.body
 
-    // assining id to a link is currently buggy.
-    // it is addressed when integrated with db automatically as db assigns the ids
-    const newLink = {
-        id: allLinks.length + 1,
+    const newLinkDB = new linkModel({
         name: name,
         link: link
+    })
+    async function createNewLink() {
+        try {
+            const result = await newLinkDB.save()
+            res.send(result);
+        }
+        catch(error){
+            res.status(400).send(error.message)
+        }
     }
-
-    allLinks.unshift(newLink)
-    res.send(newLink)
+    createNewLink()
 })
 
 app.put('/api/links/:id', (req, res) => {
-    const updateLink = allLinks.find(link => link.id === parseInt(req.params.id))
-    if(!updateLink) return res.status(404).send('The link with given ID was not found')
-
+    const id = req.params.id
     const { error } = validateLink(req.body)
     if (error) return res.status(400).send(error.details[0].message)
-
-    updateLink.name = req.body.name
-    updateLink.link = req.body.link
-    res.send(updateLink);
+    async function UpdateLink() {
+        try {
+            const result = await linkModel.findByIdAndUpdate(id, {
+                $set: {
+                    name: req.body.name,
+                    link: req.body.link
+                }
+            },{new: true})
+            if(result) res.send(result);
+            else res.status(404).send('The link with given ID was not found')
+        }
+        catch(error){
+            res.status(400).send(error.message)
+        }
+    }
+    UpdateLink()
 })
 
 app.delete('/api/links/:id', (req, res) => {
-    const deleteLink = allLinks.find(link => link.id === parseInt(req.params.id))
-    if(!deleteLink) return res.status(404).send('The link with given ID was not found')
-
-    const index = allLinks.indexOf(deleteLink)
-    allLinks.splice(index, 1)
-
-    res.send(deleteLink)
+    const id = req.params.id
+    async function DeleteLink() {
+        try {
+            const result = await linkModel.findByIdAndRemove(id)
+            if(result) res.send(result);
+            else res.status(404).send('The link with given ID was not found')
+        }
+        catch(error){
+            res.status(400).send(error.message)
+        }
+        
+    }
+    DeleteLink()
 })
 
 app.get('/api/links/:id', (req, res) => {
-    const getLink = allLinks.find(link => link.id === parseInt(req.params.id))
-    if(!getLink) return res.status(404).send('The link with given ID was not found')
-
-    res.send(getLink)
+    const id = req.params.id
+    async function getLink() {
+        try {
+            const result = await linkModel.findById(id)
+            if(result) res.send(result);
+            else res.status(404).send('The link with given ID was not found')
+        }
+        catch(error){
+            res.status(400).send(error.message)
+        }
+    }
+    getLink()
 })
 
 const port = process.env.PORT || 3050

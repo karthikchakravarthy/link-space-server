@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors')
+const mongoose = require('mongoose')
 const Joi = require('joi')
 
 const app = express()
@@ -7,7 +8,9 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-
+mongoose.connect('mongodb://localhost/linkSpaceDB')
+    .then(() => console.log("connection is successfull to mongoDB"))
+    .catch(() => console.error("could not connect to mongodb"))
 const allLinks = [
     {
         "id": "1",

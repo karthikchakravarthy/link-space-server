@@ -66,10 +66,13 @@ const allLinks = [
 ]
 
 function validateLink(link) {
-    const schema = Joi.object({
-        name: Joi.string().min(3).max(30).required(),
-        link: Joi.string().min(4).required()
-    })
+    const urlPattern = "((http|https)://)?(www.)?"
+        + "[a-zA-Z0-9@:%._\+~#?&//=]{2,256}\.[a-z]"
+        + "{2,6}([-a-zA-Z0-9@:%._\+~#?&//=]*)",
+        schema = Joi.object({
+            name: Joi.string().min(3).max(30).required(),
+            link: Joi.string().regex(new RegExp(urlPattern)).required()
+        })
     return schema.validate(link)
 }
 

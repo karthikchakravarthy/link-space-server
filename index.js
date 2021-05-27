@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const links = require('./routes/links')
 const users = require('./routes/users')
 const auth = require('./routes/auth')
+const config = require('config')
 
 const app = express()
 
@@ -12,6 +13,11 @@ app.use(express.json())
 app.use('/api/links', links)
 app.use('/api/users', users)
 app.use('/api/auth', auth)
+
+if(!config.get('jwt_private_key')) {
+    console.error('Fatal error! jwt_private_key is not defined')
+    process.exit(1)
+}
 
 mongoose.connect('mongodb://localhost/linkSpaceDB')
     .then(() => console.log("connection is successfull to mongoDB"))

@@ -11,6 +11,17 @@ const Link = mongoose.model('Link', new mongoose.Schema({
     link: {
         type: String,
         required: true
+    },
+    user: {
+        type: new mongoose.Schema({
+            name: {
+                type: String,
+                required: true,
+                minlength: 5,
+                maxlength: 50
+            }
+        }),
+        required: true
     }
 }))
 

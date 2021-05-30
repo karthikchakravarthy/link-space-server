@@ -1,46 +1,11 @@
-require("express-async-errors");
 const winston = require("winston");
 const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-const links = require("./routes/links");
-const users = require("./routes/users");
-const auth = require("./routes/auth");
-const config = require("config");
-const error = require("./middleware/error");
-
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-app.use("/api/links", links);
-app.use("/api/users", users);
-app.use("/api/auth", auth);
-app.use(error);
-
-winston.add(
-  new winston.transports.Console(),
-  new winston.transports.File({ filename: "logfile.log" })
-);
-
-winston.exceptions.handle(
-  new winston.transports.Console(),
-  new winston.transports.File({ filename: "uncaughtExceptions.log" })
-);
-
-process.on("unhandledRejection", (ex) => {
-  throw ex;
-});
-
-if (!config.get("jwt_private_key")) {
-  console.error("Fatal error! jwt_private_key is not defined");
-  process.exit(1);
-}
-
-mongoose
-  .connect("mongodb://localhost/linkSpaceDB")
-  .then(() => console.log("connection is successfull to mongoDB"))
-  .catch(() => console.error("could not connect to mongodb"));
+require("./startup/logging")();
+require("./startup/db")();
+require("./startup/routes")(app);
+require("./startup/config")();
 
 const port = process.env.PORT || 3050;
-app.listen(port, () => console.log(`listening on port ${port}`));
+app.listen(port, () => winston.info(`listening on port ${port}`));

@@ -6,24 +6,19 @@ const { User } = require("../models/user");
 const router = express.Router();
 
 router.post("/", async (req, res) => {
-  try {
-    const { error } = validate(req.body);
-    if (error) return res.status(400).send(error.details[0].message);
+  const { error } = validate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
 
-    let { email, password } = req.body;
+  let { email, password } = req.body;
 
-    let user = await User.findOne({ email });
-    if (!user) return res.status(400).send("Invalid user or password");
+  let user = await User.findOne({ email });
+  if (!user) return res.status(400).send("Invalid user or password");
 
-    isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword)
-      return res.status(400).send("Invalid user or password");
+  isValidPassword = await bcrypt.compare(password, user.password);
+  if (!isValidPassword) return res.status(400).send("Invalid user or password");
 
-    const token = user.generateAuthToken();
-    res.send({ token });
-  } catch (ex) {
-    console.log(ex);
-  }
+  const token = user.generateAuthToken();
+  res.send({ token });
 });
 
 function validate(user) {

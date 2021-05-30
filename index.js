@@ -1,4 +1,5 @@
 require("express-async-errors");
+const winston = require("winston");
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
@@ -16,6 +17,20 @@ app.use("/api/links", links);
 app.use("/api/users", users);
 app.use("/api/auth", auth);
 app.use(error);
+
+winston.add(
+  new winston.transports.Console(),
+  new winston.transports.File({ filename: "logfile.log" })
+);
+
+winston.exceptions.handle(
+  new winston.transports.Console(),
+  new winston.transports.File({ filename: "uncaughtExceptions.log" })
+);
+
+process.on("unhandledRejection", (ex) => {
+  throw ex;
+});
 
 if (!config.get("jwt_private_key")) {
   console.error("Fatal error! jwt_private_key is not defined");
